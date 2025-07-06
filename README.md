@@ -74,18 +74,6 @@ The decrypted video feed will appear in a new window. Press `q` to close it.
 
 ---
 
-## 📁 Project Structure
-
-```
-.
-├── Arducam_Streamer_v2.c    # Main firmware (streaming and encryption)
-├── arducam.c                # Low-level SPI interface for camera control
-├── udp_server.py            # Python script to receive and decode the video stream
-└── README.md
-```
-
----
-
 ## ⚙️ Technical Highlights & Optimizations
 
 ### 🧠 Dual-Core Parallelism
