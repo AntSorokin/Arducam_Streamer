@@ -1,7 +1,7 @@
 
 # 📷 Arducam Streamer
 
-**Arducam Streamer** is a real-time video streaming project that uses the **RP2040 Pico W** and the **Arducam Mega 3MP NoIR** camera. It captures MJPEG frames, encrypts them using AES, and sends them over Wi-Fi using UDP. A Python script (udp_server.py) is included to receive, decrypt, and display the video stream on your computer.
+**Arducam Streamer** is a real-time video streaming project that uses the **RP2040 Pico W** and the **Arducam Mega 3MP NoIR** camera. It captures MJPEG frames, encrypts them using AES, and sends them over Wi-Fi using UDP. A Python script (`udp_server.py`) is included to receive, decrypt, and display the video stream on your computer.
 
 ---
 
@@ -51,8 +51,7 @@ pip install opencv-python pycryptodome
 
 ### 5. Update the Python Demo Script
 
-In `udp_server.py`, update the encryption parameters to match the ones used in the firmware:
-
+In `udp_server.py`, update the encryption parameters on line 29-30 to match the ones used in the firmware:
 ```python
 key = 'your-key'
 iv  = 'your-iv'
