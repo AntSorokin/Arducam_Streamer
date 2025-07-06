@@ -1,15 +1,16 @@
+
 # 📷 Arducam Streamer
 
-**Arducam Streamer** is a real-time, AES-encrypted MJPEG video streaming project using the **RP2040 Pico W** and the **Arducam Mega 3MP NoIR** camera module. It streams video over Wi-Fi using a UDP socket. A demo Python script (`udp_server.py`) is included to receive and display the video feed.
+**Arducam Streamer** is a real-time video streaming project that uses the **RP2040 Pico W** and the **Arducam Mega 3MP NoIR** camera. It captures MJPEG frames, encrypts them using AES, and sends them over Wi-Fi using UDP. A Python script (udp_server.py) is included to receive, decrypt, and display the video stream on your computer.
 
 ---
 
 ## 🚀 Features
 
-- 🔒 AES encryption (CBC mode)  
-- 🌐 Video streaming over UDP  
-- 🎞️ Real-time MJPEG decoding using OpenCV  
-- 💻 Python-based demo server  
+- 🔒 AES-128 CBC-mode encryption of image data
+- 📷 Dual-core processing for concurrent camera polling and data encryption
+- 🌐 Low-latency streaming via UDP with fragmentation-aware transmission
+- 🎞️ Real-time MJPEG decoding with OpenCV on the receiving end
 
 ---
 
@@ -22,59 +23,54 @@ git clone https://github.com/your_username/arducam-streamer.git
 cd arducam-streamer
 ```
 
-### 2. Configure the C Code
+### 2. Configure the Firmware
 
-Open `Arducam_Streamer_v2.c` and edit the following lines:
+Edit `Arducam_Streamer_v2.c` and set your Wi-Fi and encryption parameters:
 
 ```c
-#define SERVER_IP     "192.168.x.x"
 #define WIFI_SSID     "YourSSID"
 #define WIFI_PASSWORD "YourPassword"
+#define SERVER_IP     "192.168.x.x"
 #define KEY           "your-32-byte-key"
 #define IV            "your-16-byte-iv"
 ```
 
-> 📝 Make sure your `KEY` is 32 bytes and your `IV` is 16 bytes.
+> 🔑 Make sure `KEY` is 32 bytes and `IV` is 16 bytes.
 
-### 3. Compile and Flash
+### 3. Compile and Flash the Firmware
 
-Use **VS Code** with the **Raspberry Pi Pico extension** to compile and flash the firmware to your RP2040 Pico W.
+Use **Visual Studio Code** with the **Raspberry Pi Pico SDK** to compile the firmware and flash it to the Pico W.
 
 ### 4. Set Up the Python Environment
 
-Create a virtual environment (optional but recommended), then install the dependencies:
+Install the required dependencies:
 
 ```bash
 pip install opencv-python pycryptodome
 ```
 
-### 5. Update the Python UDP Server
+### 5. Update the Python Demo Script
 
-Edit lines 29–30 in `udp_server.py`:
+In `udp_server.py`, update the encryption parameters to match the ones used in the firmware:
 
 ```python
 key = b'your-32-byte-key'
 iv  = b'your-16-byte-iv'
 ```
 
-### 6. Open UDP Port in Firewall
+### 6. Allow UDP Through the Firewall
 
-Allow inbound UDP traffic on **port 20001** (default):
+Enable inbound UDP traffic on **port 20001** (default).
 
-- **Windows:** Add a new rule in the Firewall settings.  
-- **Linux/macOS:** Use `ufw` or system firewall tools.
-
-### 7. Run the UDP Server
+### 7. Run the Python UDP Server
 
 ```bash
 python udp_server.py
 ```
 
-### 8. View the Video Feed
+### 8. View the Video Stream
 
-A window should appear with the live MJPEG stream.
-
-- Press `q` to close the window.
+The decrypted video feed will appear in a new window. Press `q` to close it.
 
 ---
 
@@ -82,17 +78,55 @@ A window should appear with the live MJPEG stream.
 
 ```
 .
-├── Arducam_Streamer_v2.c      # Pico W C firmware
-├── udp_server.py              # Python demo UDP server
+├── Arducam_Streamer_v2.c    # Main firmware (streaming and encryption)
+├── arducam.c                # Low-level SPI interface for camera control
+├── udp_server.py            # Python script to receive and decode the video stream
 └── README.md
 ```
 
 ---
 
-## 📌 Notes
+## ⚙️ Technical Highlights & Optimizations
 
-- The Pico W and your computer **must be on the same network**.  
-- UDP is used for low-latency streaming. You may experience some packet loss.  
-- AES mode is **CBC** – both key and IV must match on sender and receiver.
+### 🧠 Dual-Core Parallelism
+
+The RP2040's dual-core architecture is leveraged for improved performance:
+
+- **Core 0**: Handles AES encryption and UDP packet transmission.
+- **Core 1**: Continuously polls the camera, retrieves image data, and stores it in a shared buffer.
+
+This concurrent design ensures that encryption and transmission can occur without waiting for the camera, significantly improving throughput.
+
+### 🔁 Double Buffering
+
+Two memory buffers (`buf0` and `buf1`) are used in an alternating fashion:
+
+- While one buffer is being filled with new camera data,
+- The other is being encrypted and transmitted.
+
+This non-blocking mechanism allows for near-continuous capture and stream processing.
+
+### ✂️ Fragmentation-Aware UDP Streaming
+
+Each image frame is encrypted as a whole and then **split into multiple UDP packets** manually to avoid IP-layer fragmentation. Each packet includes:
+
+- A **frame ID**
+- A **packet index**
+- A **completion flag**
+
+These are appended to the end of the payload, allowing the receiver to reconstruct and decrypt the full frame in correct order.
+
+### 🔐 Secure Streaming
+
+The entire image buffer is padded and encrypted using **AES-128 CBC mode** before being split and sent, ensuring privacy even over insecure networks. The receiver uses `pycryptodome` to decrypt and reassemble the image in memory before displaying it.
+
+---
+
+## 📝 Notes
+
+- The Pico W and host machine must be on the **same local network**.
+- The UDP protocol is used for speed, so occasional packet loss may occur.
+- A hardware watchdog is used to ensure the Pico resets if a fault or hang occurs.
+- The receiver uses OpenCV to decode MJPEG images in real-time.
 
 ---
