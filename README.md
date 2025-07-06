@@ -7,7 +7,7 @@
 
 ## 🚀 Features
 
-- 🔒 AES-128 CBC-mode encryption of image data
+- 🔒 AES CBC-mode encryption of image data
 - 📷 Dual-core processing for concurrent camera polling and data encryption
 - 🌐 Low-latency streaming via UDP with fragmentation-aware transmission
 - 🎞️ Real-time MJPEG decoding with OpenCV on the receiving end
@@ -30,12 +30,12 @@ Edit `Arducam_Streamer_v2.c` and set your Wi-Fi and encryption parameters:
 ```c
 #define WIFI_SSID     "YourSSID"
 #define WIFI_PASSWORD "YourPassword"
-#define SERVER_IP     "192.168.x.x"
-#define KEY           "your-32-byte-key"
-#define IV            "your-16-byte-iv"
+#define SERVER_IP     "x.x.x.x"
+#define KEY           "your-key"
+#define IV            "your-iv"
 ```
 
-> 🔑 Make sure `KEY` is 32 bytes and `IV` is 16 bytes.
+> 🔑 For more details about KEY and IV see the AES implementation used for this project at [kokke/tiny-AES-c](https://github.com/kokke/tiny-AES-c).
 
 ### 3. Compile and Flash the Firmware
 
@@ -54,13 +54,15 @@ pip install opencv-python pycryptodome
 In `udp_server.py`, update the encryption parameters to match the ones used in the firmware:
 
 ```python
-key = b'your-32-byte-key'
-iv  = b'your-16-byte-iv'
+key = 'your-key'
+iv  = 'your-iv'
 ```
 
 ### 6. Allow UDP Through the Firewall
 
 Enable inbound UDP traffic on **port 20001** (default).
+- **Windows:** Add a new rule in the Firewall settings.  
+- **Linux/macOS:** Use `ufw` or system firewall tools.
 
 ### 7. Run the Python UDP Server
 
@@ -106,7 +108,7 @@ These are appended to the end of the payload, allowing the receiver to reconstru
 
 ### 🔐 Secure Streaming
 
-The entire image buffer is padded and encrypted using **AES-128 CBC mode** before being split and sent, ensuring privacy even over insecure networks. The receiver uses `pycryptodome` to decrypt and reassemble the image in memory before displaying it.
+The entire image buffer is padded and encrypted using **AES CBC mode** before being split and sent, ensuring privacy even over insecure networks. The receiver uses `pycryptodome` to decrypt and reassemble the image in memory before displaying it.
 
 ---
 
